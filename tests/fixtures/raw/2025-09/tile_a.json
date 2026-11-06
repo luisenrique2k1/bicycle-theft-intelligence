@@ -1,0 +1,77 @@
+[
+ {
+  "category": "bicycle-theft",
+  "location_type": "Force",
+  "location": {
+   "latitude": "51.5101",
+   "longitude": "-0.1302",
+   "street": {
+    "id": 111,
+    "name": "On or near Cycle Park"
+   }
+  },
+  "context": "",
+  "outcome_status": null,
+  "persistent_id": "aaa111",
+  "id": 1001,
+  "location_subtype": "",
+  "month": "2025-09"
+ },
+ {
+  "category": "bicycle-theft",
+  "location_type": "Force",
+  "location": {
+   "latitude": "51.5099",
+   "longitude": "-0.129",
+   "street": {
+    "id": 111,
+    "name": "On or near Cycle Park"
+   }
+  },
+  "context": "",
+  "outcome_status": {
+   "category": "Investigation complete; no suspect identified",
+   "date": "2025-10"
+  },
+  "persistent_id": "",
+  "id": 1002,
+  "location_subtype": "",
+  "month": "2025-09"
+ },
+ {
+  "category": "bicycle-theft",
+  "location_type": "Force",
+  "location": {
+   "latitude": "51.512",
+   "longitude": "-0.125",
+   "street": {
+    "id": 112,
+    "name": "On or near Station Road"
+   }
+  },
+  "context": "",
+  "outcome_status": null,
+  "persistent_id": "bbb222",
+  "id": 1003,
+  "location_subtype": "",
+  "month": "2025-09"
+ },
+ {
+  "category": "bicycle-theft",
+  "location_type": "Force",
+  "location": {
+   "latitude": "51.509",
+   "longitude": "-0.12",
+   "street": {
+    "id": 113,
+    "name": "On or near Shopping Area"
+   }
+  },
+  "context": "",
+  "outcome_status": null,
+  "persistent_id": "",
+  "id": 1004,
+  "location_subtype": "",
+  "month": "2025-09"
+ }
+]
