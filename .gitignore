@@ -4,3 +4,17 @@ __pycache__/
 *.duckdb
 *.duckdb.wal
 .env
+
+# macOS
+.DS_Store
+
+# Local backups
+*_backup.py
+
+# Generated Python cache
+__pycache__/
+*.pyc
+
+# Local DuckDB database
+*.duckdb
+*.duckdb.wal

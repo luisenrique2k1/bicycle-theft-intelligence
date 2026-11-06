@@ -12,10 +12,10 @@ with per_street as (
 )
 select
     *,
-    round(100.0 * thefts / sum(thefts) over (), 1)                 as pct_of_all_thefts,
+    round(100.0 * thefts / sum(thefts) over (), 2)                 as pct_of_all_thefts,
     rank() over (order by thefts desc)                             as hotspot_rank,
     -- light scoring: percentile of theft count among streets that had any theft
-    round(percent_rank() over (order by thefts), 2)                as hotspot_score
+    round(percent_rank() over (order by thefts), 2)                 as relative_count_percentile
 from per_street;
 
 create or replace table mart_monthly_trend as
@@ -33,3 +33,44 @@ select
 from fct_outcome
 group by outcome_category
 order by thefts desc;
+-- Advanced monthly trend analytics
+create or replace table mart_advanced_trends as
+with monthly as (
+    select
+        month_start,
+        thefts,
+        avg(thefts) over (
+            order by month_start
+            rows between 2 preceding and current row
+        ) as rolling_3m,
+        avg(thefts) over (
+            order by month_start
+            rows between 11 preceding and current row
+        ) as rolling_12m,
+        lag(thefts) over (
+            order by month_start
+        ) as previous_month,
+        lag(thefts, 12) over (
+            order by month_start
+        ) as same_month_last_year
+    from mart_monthly_trend
+)
+select
+    month_start,
+    thefts,
+    round(rolling_3m, 1) as rolling_3m,
+    round(rolling_12m, 1) as rolling_12m,
+    thefts - previous_month as mom_change,
+    round(
+        100.0 * (thefts - previous_month)
+        / nullif(previous_month, 0),
+        1
+    ) as mom_change_pct,
+    thefts - same_month_last_year as yoy_change,
+    round(
+        100.0 * (thefts - same_month_last_year)
+        / nullif(same_month_last_year, 0),
+        1
+    ) as yoy_change_pct
+from monthly
+order by month_start;
