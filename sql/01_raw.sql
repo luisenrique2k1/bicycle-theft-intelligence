@@ -21,7 +21,7 @@ from read_json(
     '{raw_glob}',
     format = 'array',
     filename = true,
-    columns = {{
+    columns = {
         category: 'VARCHAR',
         location_type: 'VARCHAR',
         location: 'STRUCT(latitude VARCHAR, longitude VARCHAR, street STRUCT(id BIGINT, name VARCHAR))',
@@ -31,5 +31,5 @@ from read_json(
         id: 'BIGINT',
         location_subtype: 'VARCHAR',
         month: 'VARCHAR'
-    }}
+    }
 );
