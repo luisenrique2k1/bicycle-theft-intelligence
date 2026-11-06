@@ -1,20 +1,47 @@
+# Python
 __pycache__/
+*.py[cod]
 .pytest_cache/
 .venv/
+venv/
+.coverage
+htmlcov/
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# DuckDB databases
 *.duckdb
 *.duckdb.wal
-.env
+
+# Large geographical datasets
+data/geography/
+
+# Generated dashboard and maps
+reports/*.html
+reports/*.png
+reports/*.svg
+reports/*_bounds.json
+
+# Local backups
+*_backup.py
+*.py.bak
+*.bak
 
 # macOS
 .DS_Store
 
-# Local backups
-*_backup.py
+# IDE
+.vscode/
+.idea/
 
-# Generated Python cache
-__pycache__/
-*.pyc
+# Additional local dashboard backups
+report_backup_*.py
 
-# Local DuckDB database
-*.duckdb
-*.duckdb.wal
+# Legacy dashboard and map assets
+bicycle_theft_dashboard_v2.py
+assets/south_east_map.png
