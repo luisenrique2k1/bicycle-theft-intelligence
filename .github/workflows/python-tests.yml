@@ -36,3 +36,25 @@ jobs:
       - name: Validate DuckDB SQL transformations and data quality
         run: |
           python -c "from pathlib import Path; from pipeline.build import build; con = build(Path('tests/fixtures/raw'), ':memory:', None); con.close()"
+
+  docker:
+    name: Validate Docker Images
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Build Docker images
+        run: docker compose build
+
+      - name: Run Python tests inside Docker
+        run: |
+          docker compose run --rm --no-deps \
+            bike-theft-pipeline python -m pytest -q
+
+      - name: Validate SQL transformations inside Docker
+        run: |
+          docker compose run --rm --no-deps \
+            bike-theft-pipeline python -c \
+            "from pathlib import Path; from pipeline.build import build; con = build(Path('tests/fixtures/raw'), ':memory:', None); con.close()"
