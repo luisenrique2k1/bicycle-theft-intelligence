@@ -29,5 +29,10 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
+      
       - name: Run Python tests
         run: python -m pytest -q
+
+      - name: Validate DuckDB SQL transformations and data quality
+        run: |
+          python -c "from pathlib import Path; from pipeline.build import build; con = build(Path('tests/fixtures/raw'), ':memory:', None); con.close()"
