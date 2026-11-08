@@ -10,7 +10,9 @@ FIXTURES = Path(__file__).parent / "fixtures" / "raw"
 
 @pytest.fixture()
 def con(tmp_path):
-    return build(FIXTURES, str(tmp_path / "t.duckdb"), tmp_path / "report.html")
+    connection = build(FIXTURES, str(tmp_path / "t.duckdb"), None)
+    yield connection
+    connection.close()
 
 
 def test_overlapping_tiles_are_deduplicated(con):
@@ -53,5 +55,17 @@ def test_quality_check_catches_bad_data(con):
 
 
 def test_report_is_written(con, tmp_path):
-    html = (tmp_path / "report.html").read_text()
+    from pipeline.report import write_report
+
+    project_root = Path(__file__).resolve().parents[1]
+    map_metadata = project_root / "reports" / "london_theft_map_bounds.json"
+    map_svg = project_root / "reports" / "london_basemap_georeferenced.svg"
+
+    if not map_metadata.exists() or not map_svg.exists():
+        pytest.skip("London map assets are not available in this environment")
+
+    report_path = tmp_path / "report.html"
+    write_report(con, report_path)
+
+    html = report_path.read_text(encoding="utf-8")
     assert "not the same as risk" in html and "Bank Station" in html
