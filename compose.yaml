@@ -1,11 +1,23 @@
 
 services:
+  bike-theft-geo:
+    build:
+      context: .
+      dockerfile: Dockerfile.geo
+    image: bicycle-theft-geo:latest
+    volumes:
+      - ./data/geography:/app/data/geography
+      - ./reports:/app/reports
+
   bike-theft-pipeline:
     build:
       context: .
       dockerfile: Dockerfile
-
     image: bicycle-theft-intelligence:latest
+
+    depends_on:
+      bike-theft-geo:
+        condition: service_completed_successfully
 
     volumes:
       - ./data:/app/data
