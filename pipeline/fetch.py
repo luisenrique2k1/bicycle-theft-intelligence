@@ -20,6 +20,7 @@ from pathlib import Path
 import requests
 
 API = "https://data.police.uk/api/crimes-street/bicycle-theft"
+AVAILABLE_DATES_API = "https://data.police.uk/api/crimes-street-dates"
 RAW_DIR = Path("data/raw")
 MANIFEST = Path("data/manifest.csv")
 MANIFEST_FIELDS = ["month", "tile", "lat", "lng", "url", "http_status", "bytes", "sha256", "fetched_at_utc"]
@@ -43,6 +44,24 @@ TILES: dict[str, tuple[float, float]] = {
     "guildford": (51.2362, -0.5704),
 }
 
+def get_latest_available_month() -> str:
+    """Return the latest published UK Police street-crime month."""
+    response = requests.get(AVAILABLE_DATES_API, timeout=30)
+    response.raise_for_status()
+
+    months = [
+        item["date"]
+        for item in response.json()
+        if isinstance(item, dict) and "date" in item
+    ]
+
+    if not months:
+        raise RuntimeError("Police API returned no available crime-data months")
+
+    latest = max(months)
+    datetime.strptime(latest, "%Y-%m")
+
+    return latest
 
 def tile_path(month: str, tile: str) -> Path:
     return RAW_DIR / month / f"{tile}.json"
@@ -105,12 +124,39 @@ def run(months: list[str], force: bool = False, pause: float = 0.2) -> int:
 
 def main() -> None:
     p = argparse.ArgumentParser(description=__doc__)
-    p.add_argument("--months", nargs="+", required=True, help="YYYY-MM, e.g. 2025-09")
-    p.add_argument("--force", action="store_true", help="re-download files already on disk")
+
+    group = p.add_mutually_exclusive_group(required=True)
+
+    group.add_argument(
+        "--months",
+        nargs="+",
+        help="Specific months to fetch, e.g. 2025-09",
+    )
+
+    group.add_argument(
+        "--latest",
+        action="store_true",
+        help="Automatically fetch the latest available crime-data month",
+    )
+
+    p.add_argument(
+        "--force",
+        action="store_true",
+        help="Re-download files already on disk",
+    )
+
     args = p.parse_args()
-    for m in args.months:
-        datetime.strptime(m, "%Y-%m")  # validate format
-    n = run(args.months, force=args.force)
+
+    if args.latest:
+        months = [get_latest_available_month()]
+        print(f"Latest available month: {months[0]}")
+    else:
+        months = args.months
+
+    for month in months:
+        datetime.strptime(month, "%Y-%m")
+
+    n = run(months, force=args.force)
     print(f"done: {n} new files")
 
 
