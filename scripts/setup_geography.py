@@ -7,9 +7,10 @@ from urllib.parse import urlparse
 from zipfile import ZipFile
 import shutil
 import tempfile
+import argparse
 
 ROOT = Path(__file__).resolve().parents[1]
-DESTINATION = ROOT / "data" / "geography"
+DEFAULT_DESTINATION = ROOT / "data" / "geography"
 
 URL = (
     "https://download.geofabrik.de/europe/united-kingdom/"
@@ -25,18 +26,31 @@ LAYERS = (
 EXTENSIONS = (".shp", ".shx", ".dbf", ".prj")
 
 
-def files_present():
+def files_present(destination):
     return all(
-        (DESTINATION / f"{layer}{extension}").is_file()
+        (destination / f"{layer}{extension}").is_file()
         for layer in LAYERS
         for extension in EXTENSIONS
     )
 
 
 def main():
-    DESTINATION.mkdir(parents=True, exist_ok=True)
+    parser = argparse.ArgumentParser(
+        description="Download Greater London OpenStreetMap shapefiles"
+    )
+    parser.add_argument(
+        "--destination",
+        type=Path,
+        default=DEFAULT_DESTINATION,
+        help="Directory where geographical files will be stored",
+    )
 
-    if files_present():
+    args = parser.parse_args()
+    destination = args.destination.expanduser().resolve()
+
+    destination.mkdir(parents=True, exist_ok=True)
+
+    if files_present(destination):
         print("Geographical shapefiles already exist. Skipping download.")
         return
 
@@ -63,10 +77,10 @@ def main():
                     continue
 
                 with archive.open(member) as source:
-                    with (DESTINATION / name).open("wb") as target:
+                    with (destination / name).open("wb") as target:
                         shutil.copyfileobj(source, target)
 
-    if not files_present():
+    if not files_present(destination):
         raise RuntimeError("Required geographical shapefiles are missing.")
 
     print("Geographical data preparation completed successfully.")

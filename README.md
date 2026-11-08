@@ -1,4 +1,5 @@
 # Bicycle Theft Intelligence
+
 ### UK Police Data Engineering Pipeline | Python • DuckDB • SQL • Docker • GitHub Actions
 
 A reproducible data engineering project that collects, processes and analyses bicycle theft records from the UK Police API.
@@ -35,7 +36,7 @@ SQL Data Quality Validation
 Interactive HTML Dashboard
 ```
 
-GitHub Actions provides automated testing and SQL validation. Docker provides an optional, containerised execution environment.
+GitHub Actions provides automated testing and SQL validation. Docker provides an optional, containerised execution environment. A separate geographical preparation stage downloads OpenStreetMap data when needed and generates the London basemap.
 
 ## Key Features
 
@@ -46,6 +47,7 @@ GitHub Actions provides automated testing and SQL validation. Docker provides an
 - **Interactive London map:** Offline SVG basemap with geographical hotspots, zoom and pan.
 - **Trend analysis:** Monthly trends, rolling averages, year-on-year comparisons and reporting-year summaries.
 - **Investigation outcomes:** Analyses recorded police outcome categories.
+- **Automated geographical preparation:** Downloads and extracts Greater London OpenStreetMap shapefiles when missing.
 - **Automated testing:** Python pytest suite and SQL validation.
 - **CI/CD:** GitHub Actions runs automated checks on pushes and pull requests.
 - **Docker:** Optional containerised execution without installing project Python dependencies on the host.
@@ -61,16 +63,16 @@ GitHub Actions provides automated testing and SQL validation. Docker provides an
 | Docker / Docker Compose | Containerised execution |
 | GitHub Actions | Continuous integration |
 | GeoPandas / PyProj | Geographical processing and coordinate transformation |
-| OpenStreetMap | London geographical basemap |
+| OpenStreetMap / Geofabrik | London geographical basemap data |
 | HTML / SVG / JavaScript | Interactive offline dashboard |
 
 ## Running the Project
 
-The project supports two execution methods.
+The project supports two execution methods. **Both use the same Python and SQL pipeline code; Docker is optional.**
 
 ### Option 1 — Without Docker
 
-**Requirements:** Python 3.12 and Bash.
+**Requirements:** Python 3.12, Bash, internet access for first-time geographical downloads, and sufficient free disk space for the OpenStreetMap extract.
 
 Clone the repository:
 
@@ -85,7 +87,7 @@ Run:
 ./run.sh
 ```
 
-The script creates or uses a Python virtual environment, installs dependencies, runs tests, builds the DuckDB warehouse, validates data quality and generates the HTML dashboard.
+The script creates or reuses a Python virtual environment, installs required dependencies (including GeoPandas), prepares geographical data if missing, generates the London map, builds the DuckDB warehouse and HTML dashboard, and runs the Python tests.
 
 Other commands:
 
@@ -95,11 +97,15 @@ Other commands:
 ./run.sh fetch 2025-09
 ```
 
-Fetching additional police data requires internet access. Existing raw files are reused.
+- `test` runs Python tests without downloading geographical data.
+- `build` prepares the map and rebuilds the warehouse and dashboard.
+- `fetch` retrieves police data for the specified month; it requires internet access.
+
+Existing raw data files are reused during a normal build. Running `./run.sh` does **not** automatically fetch new police records.
 
 ### Option 2 — With Docker
 
-**Requirements:** Docker Engine with Docker Compose.
+**Requirements:** Docker Engine with Docker Compose, internet access for the first geographical download, and sufficient disk space.
 
 Clone the same repository, then run:
 
@@ -107,17 +113,18 @@ Clone the same repository, then run:
 docker compose up --build
 ```
 
-Docker builds a Python 3.12 environment, installs dependencies, runs automated tests, executes SQL transformations and writes the database and dashboard to the host project directory.
+Docker Compose builds and runs two services in sequence:
 
-To run tests only:
+1. **`bike-theft-geo`:** Checks for geographical shapefiles, downloads them from Geofabrik when missing, and generates the London SVG basemap and map metadata.
+2. **`bike-theft-pipeline`:** Runs Python tests, executes SQL transformations and quality checks, and writes the DuckDB database and dashboard to the host project directory.
+
+The pipeline service starts only after the geographical preparation service completes successfully. Both containers are expected to exit with code `0` after processing.
+
+To run tests only in the pipeline container:
 
 ```bash
-docker compose run --rm bike-theft-pipeline python -m pytest -q
+docker compose run --rm --no-deps bike-theft-pipeline python -m pytest -q
 ```
-
-The container exits after processing is complete. Exit code `0` indicates successful execution.
-
-**Both execution methods use the same Python and SQL code.** Docker is optional.
 
 ### Dashboard Output
 
@@ -127,9 +134,7 @@ The generated dashboard is:
 reports/report.html
 ```
 
-Open it in a web browser.
-
-**Geographical assets are required:** The full dashboard expects generated London map files in `reports/`. These files are excluded from Git because of their size. See the map-generation instructions below.
+Open it in a web browser. The London basemap is generated automatically when using `./run.sh` or `docker compose up --build`. The large geographical source data and generated map assets are excluded from Git.
 
 ## Data Source
 
@@ -168,46 +173,78 @@ The dashboard uses a geographically referenced OpenStreetMap SVG basemap, transf
 
 The map supports interactive navigation and hotspot exploration.
 
-### Generating Map Assets
+### Automatic Geographical Data Preparation
 
-The geographical source data is stored locally in:
+The project automatically downloads and prepares Greater London OpenStreetMap geographical data. **No manual shapefile download is required.**
+
+To prepare the map and run the full pipeline locally:
+
+```bash
+./run.sh
+```
+
+Or use Docker:
+
+```bash
+docker compose up --build
+```
+
+The geographical setup checks whether the required files already exist and skips downloading them when they are present. Otherwise, it downloads the Greater London shapefile archive from Geofabrik, extracts the required layers and generates the basemap.
+
+### Geographical Data Sources
+
+The source data comes from [Geofabrik's Greater London OpenStreetMap extract](https://download.geofabrik.de/europe/united-kingdom/england/greater-london.html).
+
+The following layers are required:
+
+```text
+gis_osm_landuse_a_free_1
+gis_osm_water_a_free_1
+gis_osm_roads_free_1
+```
+
+Each layer requires `.shp`, `.shx`, `.dbf` and `.prj` components.
+
+The extracted source files are stored in:
 
 ```text
 data/geography/
 ```
 
-The map-generation script requires these OpenStreetMap shapefile layers:
+Map generation uses GeoPandas and British National Grid (`EPSG:27700`) coordinates. Generated outputs include:
 
 ```text
-gis_osm_landuse_a_free_1.shp
-gis_osm_water_a_free_1.shp
-gis_osm_roads_free_1.shp
+reports/london_basemap_georeferenced.svg
+reports/london_theft_map_bounds.json
 ```
 
-Their associated `.dbf`, `.shx`, `.prj` and other supporting files must also be present.
+### Optional: Custom Download Directory
 
-The project uses OpenStreetMap shapefiles from Geofabrik. Obtain the appropriate regional extract from [Geofabrik Downloads](https://download.geofabrik.de/) and place the required layers in `data/geography/`.
-
-Map generation requires GeoPandas and its geographical dependencies in addition to the core pipeline requirements.
-
-With the geographical dependencies installed, run:
+The setup script accepts a custom destination for isolated testing:
 
 ```bash
-python scripts/generate_london_map.py
+.venv/bin/python scripts/setup_geography.py \
+  --destination /tmp/bike-theft-geography-test
 ```
 
-This generates the SVG basemap and its geographical metadata under `reports/`.
+This downloads and extracts the shapefiles into the specified directory without changing `data/geography/`. It does **not** change the input directory used by `scripts/generate_london_map.py`; the normal build continues to use `data/geography/`.
 
-The generated map and large source datasets are not committed to the repository.
+### Reproducibility and Data Storage
 
-**Note:** The core SQL transformations and automated tests can run without the map assets. Full dashboard generation requires them.
+The source ZIP archive was approximately **208 MB** when tested; its size can change as OpenStreetMap data is updated. Extracted files require additional disk space.
+
+Large geographical datasets and generated map assets are excluded from Git to keep the repository lightweight.
+
+**Attribution:** © OpenStreetMap contributors. OpenStreetMap data is available under the Open Database License (ODbL). See [OpenStreetMap copyright and licence](https://www.openstreetmap.org/copyright).
+
+**Note:** Core SQL transformations and Python tests can run without the map assets. The complete interactive London dashboard requires the generated map files.
 
 ## Testing and Data Quality
 
 Run Python tests locally:
 
 ```bash
-python -m pytest -q
+.venv/bin/python -m pytest -q
 ```
 
 Or use:
@@ -249,7 +286,7 @@ The workflow:
 5. Builds DuckDB transformations against synthetic test fixtures.
 6. Runs all nine SQL data quality checks.
 
-The dashboard integration test is skipped in CI when the excluded geographical assets are unavailable.
+The dashboard integration test is skipped in CI when excluded geographical assets are unavailable. **The current CI workflow does not download the full OpenStreetMap dataset or build Docker images.** Docker and the real geographical download were also tested manually during development.
 
 [View GitHub Actions](https://github.com/luisenrique2k1/bicycle-theft-intelligence/actions)
 
@@ -259,8 +296,8 @@ The dashboard integration test is skipped in CI when the excluded geographical a
 - Incorporate later-arriving police outcome records.
 - Compare recorded thefts against bicycle parking capacity or cycling activity.
 - Introduce scheduled ingestion and incremental updates.
-- Improve automated geographical asset preparation.
-- Extend CI/CD to build and validate the Docker image.
+- Extend CI/CD to build and validate Docker images and geographical preparation.
+- Add a full clean-clone end-to-end integration test.
 - Consider cloud deployment and orchestration for scheduled pipeline execution.
 
 ## AI-Assisted Development
@@ -275,7 +312,7 @@ The project uses synthetic fixtures to validate transformation logic independent
 
 - **Kept:** The layered DuckDB architecture and automated data quality checks.
 - **Rejected:** Reliance on `persistent_id` alone for deduplication, because it can be missing.
-- **Changed:** Improved the London map performance, added reproducible Docker execution and automated CI/CD validation.
+- **Changed:** Improved London map performance, added automated geographical data preparation, reproducible Docker execution and automated CI/CD validation.
 
 These notes should be reviewed and adjusted to reflect the developer's own decisions and contributions accurately.
 
