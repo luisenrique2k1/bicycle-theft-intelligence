@@ -1,0 +1,29 @@
+
+# Python virtual environments and cache
+.venv/
+venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Git repository
+.git/
+.github/
+
+# Local databases
+*.duckdb
+*.duckdb.wal
+
+# Generated reports and maps
+reports/
+
+# Large geographical datasets
+data/geography/
+
+# Local configuration and secrets
+.env
+.env.*
+.DS_Store
+
+# Documentation
+README.md

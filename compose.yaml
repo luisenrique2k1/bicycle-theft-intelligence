@@ -1,0 +1,22 @@
+
+services:
+  bike-theft-pipeline:
+    build:
+      context: .
+      dockerfile: Dockerfile
+
+    image: bicycle-theft-intelligence:latest
+
+    volumes:
+      - ./data:/app/data
+      - ./reports:/app/reports
+      - ./:/workspace
+
+    command:
+      - sh
+      - -c
+      - |
+        python -m pytest -q &&
+        python -m pipeline.build \
+          --db /workspace/warehouse.duckdb \
+          --report /app/reports/report.html
