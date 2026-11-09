@@ -2,7 +2,7 @@ import pytest
 import requests
 from unittest.mock import Mock, patch
 
-from pipeline.fetch import get_latest_available_month
+from pipeline.fetch import get_latest_available_month, validate_month
 
 
 def test_get_latest_available_month():
@@ -53,3 +53,30 @@ def test_get_latest_available_month_http_error():
             match="503 Service Unavailable",
         ):
             get_latest_available_month()
+
+
+def test_validate_month_missing_tiles(tmp_path):
+    """Reject ingestion when expected geographical tiles are missing."""
+
+    with patch("pipeline.fetch.RAW_DIR", tmp_path):
+        with pytest.raises(
+            RuntimeError,
+            match="Incomplete ingestion for 2026-09",
+        ):
+            validate_month("2026-09")
+
+
+def test_validate_month_success(tmp_path):
+    """Accept a month when all 12 geographical tiles contain valid JSON."""
+    from pipeline.fetch import TILES
+
+    month_dir = tmp_path / "2026-09"
+    month_dir.mkdir()
+
+    for tile in TILES:
+        (month_dir / f"{tile}.json").write_text(
+            "[]", encoding="utf-8"
+        )
+
+    with patch("pipeline.fetch.RAW_DIR", tmp_path):
+        validate_month("2026-09")

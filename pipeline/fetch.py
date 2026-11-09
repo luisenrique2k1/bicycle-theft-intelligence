@@ -12,6 +12,7 @@ from __future__ import annotations
 import argparse
 import csv
 import hashlib
+import json
 import sys
 import time
 from datetime import datetime, timezone
@@ -122,6 +123,37 @@ def run(months: list[str], force: bool = False, pause: float = 0.2) -> int:
     return fetched
 
 
+def validate_month(month: str) -> None:
+    """Verify that all expected tiles contain valid JSON arrays."""
+    errors = []
+
+    for tile in TILES:
+        path = tile_path(month, tile)
+
+        if not path.is_file():
+            errors.append(f"{tile}: missing file")
+            continue
+
+        try:
+            with path.open("r", encoding="utf-8") as f:
+                records = json.load(f)
+
+            if not isinstance(records, list):
+                errors.append(f"{tile}: expected a JSON array")
+
+        except (OSError, UnicodeError, json.JSONDecodeError) as exc:
+            errors.append(f"{tile}: invalid JSON ({exc})")
+
+    if errors:
+        raise RuntimeError(
+            f"Incomplete ingestion for {month}:\n"
+            + "\n".join(errors)
+        )
+
+    print(f"Validated {month}: all {len(TILES)} tiles present with valid JSON")
+
+
+
 def main() -> None:
     p = argparse.ArgumentParser(description=__doc__)
 
@@ -157,8 +189,11 @@ def main() -> None:
         datetime.strptime(month, "%Y-%m")
 
     n = run(months, force=args.force)
-    print(f"done: {n} new files")
 
+    for month in months:
+        validate_month(month)
+
+    print(f"done: {n} new files")
 
 if __name__ == "__main__":
     main()
