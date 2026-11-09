@@ -1,0 +1,29 @@
+version: 2
+
+models:
+  - name: stg_crimes
+    description: "Cleaned and deduplicated bicycle theft records."
+    columns:
+      - name: crime_id
+        description: "Unique identifier for each bicycle theft."
+        data_tests:
+          - not_null
+          - unique
+
+      - name: category
+        description: "Police API crime category."
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['bicycle-theft']
+
+      - name: crime_month
+        description: "Month in which the crime was recorded."
+        data_tests:
+          - not_null
+
+      - name: street_id
+        description: "Police API street identifier."
+        data_tests:
+          - not_null

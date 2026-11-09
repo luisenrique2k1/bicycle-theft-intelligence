@@ -3,5 +3,5 @@ bicycle_theft:
   outputs:
     dev:
       type: duckdb
-      path: dbt_warehouse.duckdb
+      path: "{{ env_var('BIKE_THEFT_DB_PATH', 'dbt_warehouse.duckdb') }}"
       threads: 4

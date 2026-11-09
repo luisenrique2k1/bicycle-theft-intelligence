@@ -18,7 +18,7 @@ select
     regexp_extract(filename, '([^/]+)/[^/]+$', 1) as source_month_dir,
     filename as source_file
 from read_json(
-    'data/raw/*/*.json',
+    '{{ env_var("BIKE_THEFT_RAW_PATH", "../data/raw/*/*.json") }}',
     format = 'array',
     filename = true,
     columns = {

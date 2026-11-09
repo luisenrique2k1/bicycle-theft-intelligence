@@ -1,0 +1,30 @@
+version: 2
+
+models:
+  - name: dim_streets
+    description: "Street reference dimension for bicycle theft analysis."
+    columns:
+      - name: street_id
+        data_tests:
+          - not_null
+          - unique
+
+  - name: fct_bicycle_thefts
+    description: "One row per unique bicycle theft event."
+    columns:
+      - name: crime_id
+        data_tests:
+          - not_null
+          - unique
+
+      - name: street_id
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_streets')
+                field: street_id
+
+      - name: crime_month
+        data_tests:
+          - not_null

@@ -1,0 +1,38 @@
+version: 2
+
+models:
+  - name: mart_monthly_thefts
+    description: "Monthly bicycle theft trends across sampled areas."
+    columns:
+      - name: crime_month
+        data_tests:
+          - not_null
+          - unique
+
+      - name: total_thefts
+        data_tests:
+          - not_null
+
+  - name: mart_theft_hotspots
+    description: "Bicycle theft counts grouped by police street ID."
+    columns:
+      - name: street_id
+        data_tests:
+          - not_null
+          - unique
+          - relationships:
+              arguments:
+                to: ref('dim_streets')
+                field: street_id
+
+      - name: total_thefts
+        data_tests:
+          - not_null
+
+      - name: latitude
+        data_tests:
+          - not_null
+
+      - name: longitude
+        data_tests:
+          - not_null
