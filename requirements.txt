@@ -3,3 +3,4 @@ duckdb>=1.0
 requests>=2.31
 pytest>=8.0
 pyproj>=3.6
+boto3>=1.43,<2.0

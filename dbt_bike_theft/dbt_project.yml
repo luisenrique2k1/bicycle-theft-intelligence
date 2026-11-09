@@ -1,0 +1,11 @@
+name: bicycle_theft
+version: '1.0.0'
+config-version: 2
+
+profile: bicycle_theft
+
+model-paths: ["models"]
+
+models:
+  bicycle_theft:
+    +materialized: table

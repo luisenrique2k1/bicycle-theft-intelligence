@@ -45,3 +45,17 @@ report_backup_*.py
 # Legacy dashboard and map assets
 bicycle_theft_dashboard_v2.py
 assets/south_east_map.png
+
+# Terraform
+**/.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+*.tfvars.json
+crash.log
+crash.*.log
+
+# dbt generated files
+**/target/
+**/logs/
+**/.user.yml
