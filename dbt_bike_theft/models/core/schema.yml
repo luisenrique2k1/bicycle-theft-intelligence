@@ -28,3 +28,14 @@ models:
       - name: crime_month
         data_tests:
           - not_null
+
+      - name: collection_area
+        description: "Geographical collection area assigned from the retained source file."
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values:
+                  - London
+                  - Brighton
+                  - Guildford

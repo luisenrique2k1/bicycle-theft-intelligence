@@ -1,16 +1,117 @@
 # Bicycle Theft Intelligence
 
-### UK Police Data Engineering Pipeline | Python • DuckDB • SQL • Docker • GitHub Actions
+### End-to-End Data Engineering Portfolio Project
 
-A reproducible data engineering project that collects, processes and analyses bicycle theft records from the UK Police API.
+**Python • DuckDB • dbt • SQL • AWS S3 • Terraform • GitHub Actions • Streamlit • Plotly**
 
-The project transforms raw JSON records into a structured DuckDB warehouse and generates an interactive HTML dashboard featuring geographical hotspots, monthly trends, investigation outcomes and data quality results.
+Bicycle Theft Intelligence is an end-to-end data engineering project that collects, processes, validates and visualises bicycle theft records from the UK Police API.
 
-**Who is it for?** Cyclists, cycling clubs and anyone interested in exploring recorded bicycle theft patterns.
+The project demonstrates practical data engineering skills through automated ingestion, cloud infrastructure, dimensional data modelling, data quality testing, workflow automation and interactive analytics.
 
-**Important:** Recorded incidents are not a direct measure of personal theft risk. Police locations are approximate, reporting is incomplete, and areas with more bicycle activity may naturally have more recorded incidents.
+The pipeline processes **36 months of historical data**, containing **18,727 raw records** and **13,953 unique bicycle theft incidents** across selected collection locations in London, Brighton and Guildford.
 
-## Architecture
+An interactive Streamlit dashboard enables users to explore monthly trends, compare geographical areas and investigate recorded bicycle theft hotspots using OpenStreetMap.
+
+**Project objective:** Demonstrate how raw public API data can be transformed into a reproducible, tested and accessible analytical platform.
+
+**Data limitations:** Collection locations are sampled, police-recorded locations are approximate, and recorded theft counts do not represent the probability of bicycle theft.
+
+## Modern Data Engineering Architecture — dbt, AWS and Streamlit
+
+The project has evolved into an end-to-end data engineering platform that combines automated ingestion, cloud object storage, SQL transformation, data quality testing and interactive analytics.
+
+### Dataset
+
+The pipeline processes 36 months of UK Police bicycle theft data, covering October 2023 to September 2026.
+
+| Metric | Value |
+|---|---:|
+| Reporting period | October 2023 – September 2026 |
+| Raw records collected | 18,727 |
+| Unique bicycle theft incidents | 13,953 |
+| Collection areas | London, Brighton and Guildford |
+| Raw JSON files | 432 |
+| dbt models | 6 |
+| dbt automated tests | 25 |
+
+The data covers selected collection points rather than every location within each city. Police-recorded incident counts should not be interpreted as individual theft probabilities.
+
+### Data Engineering Workflow
+
+1. **Extract — Python and UK Police API:** Retrieve monthly bicycle theft records from selected geographical collection points and preserve the raw JSON responses.
+
+2. **Store — Local files and AWS S3:** Maintain the raw files locally and synchronise them separately to an AWS S3 bucket provisioned using Terraform.
+
+3. **Transform — DuckDB and dbt:** Load raw records, clean and deduplicate overlapping observations, create dimensional models and generate analytical marts.
+
+4. **Validate — dbt and pytest:** Run automated checks for data quality, relationships, uniqueness and expected values.
+
+5. **Analyse — Streamlit and Plotly:** Explore monthly trends, compare geographical areas and investigate recorded bicycle theft hotspots on an interactive OpenStreetMap map.
+
+6. **Automate — GitHub Actions:** Run continuous integration checks and a scheduled monthly ingestion workflow.
+
+### dbt Data Models
+
+The dbt project is located in `dbt_bike_theft/` and includes six models:
+
+- `raw_crimes` — Loads source JSON records.
+- `stg_crimes` — Cleans and deduplicates the source data.
+- `dim_streets` — Provides street-level dimensional information.
+- `fct_bicycle_thefts` — Stores deduplicated bicycle theft incidents and collection-area classifications.
+- `mart_monthly_thefts` — Supports monthly trend analysis.
+- `mart_theft_hotspots` — Supports hotspot analysis.
+
+### Build the dbt Warehouse
+
+From the repository root, after installing the Python dependencies:
+
+```bash
+export BIKE_THEFT_RAW_PATH="$PWD/data/raw/*/*.json"
+export BIKE_THEFT_DB_PATH="$PWD/dbt_bike_theft/dbt_warehouse.duckdb"
+
+dbt build \
+  --project-dir dbt_bike_theft \
+  --profiles-dir dbt_bike_theft
+```
+
+The dbt build creates the analytical tables and executes the configured data quality tests.
+
+### Launch the Streamlit Dashboard
+
+After building the dbt warehouse:
+
+```bash
+python -m streamlit run dashboard/app.py
+```
+
+Open `http://localhost:8501` in your browser.
+
+The dashboard provides geographical filters for London, Brighton and Guildford, reporting-period selection, monthly theft trends, area comparisons, ranked hotspots and an interactive OpenStreetMap hotspot map.
+
+### Cloud Infrastructure
+
+The project uses Terraform configuration in `terraform/aws/` to provision an AWS S3 bucket in `eu-north-1` (Stockholm).
+
+The bucket has versioning and public-access blocking enabled. Raw JSON files are uploaded using a separate incremental synchronisation process. The scheduled monthly GitHub Actions workflow does not currently perform automatic S3 synchronisation.
+
+### Continuous Integration and Monthly Automation
+
+Two GitHub Actions workflows are defined:
+
+- `.github/workflows/python-tests.yml` — Runs automated testing and validation.
+- `.github/workflows/monthly-ingestion.yml` — Supports scheduled and manual monthly ingestion and warehouse builds.
+
+The monthly workflow is scheduled for the 15th of each month at 08:00 UTC.
+
+### Data Interpretation and Limitations
+
+The dataset contains recorded incidents from selected geographical collection points. It is not a complete census of bicycle theft across London, Brighton or Guildford.
+
+Police-provided crime locations are approximate. Differences in recorded theft counts may reflect collection coverage, reporting practices and bicycle activity rather than differences in individual theft risk.
+
+The dashboard should therefore be used to explore patterns in the collected records, not to calculate the probability that a bicycle will be stolen at a particular location.
+
+## Original Pipeline Architecture — Python, SQL and HTML Dashboard
 
 ```text
 UK Police API
@@ -56,17 +157,88 @@ GitHub Actions provides automated testing and SQL validation. Docker provides an
 
 | Technology | Purpose |
 |---|---|
-| Python 3.12 | Data ingestion, transformation orchestration and reporting |
-| DuckDB | Analytical database |
-| SQL | Data modelling, marts and quality checks |
-| Pytest | Automated testing |
-| Docker / Docker Compose | Containerised execution |
-| GitHub Actions | Continuous integration |
-| GeoPandas / PyProj | Geographical processing and coordinate transformation |
-| OpenStreetMap / Geofabrik | London geographical basemap data |
-| HTML / SVG / JavaScript | Interactive offline dashboard |
+| Python 3.12 | API ingestion, automation and pipeline orchestration |
+| UK Police API | Public bicycle theft data source |
+| DuckDB | Local analytical data warehouse |
+| dbt Core + dbt-duckdb | SQL transformations, dimensional modelling and automated data quality tests |
+| SQL | Data cleaning, deduplication, fact tables, dimensions and analytical marts |
+| AWS S3 | Cloud object storage for raw JSON data |
+| Terraform | Infrastructure as Code for provisioning AWS resources |
+| boto3 | Incremental synchronisation of raw files to AWS S3 |
+| GitHub Actions | Continuous integration and scheduled monthly ingestion |
+| pytest | Automated Python testing |
+| Streamlit | Interactive analytics dashboard |
+| Plotly | Interactive charts and geographical hotspot visualisation |
+| OpenStreetMap | Basemap for the Streamlit hotspot map |
+| Docker / Docker Compose | Optional containerised execution of the original pipeline |
+| GeoPandas / PyProj | Geographical processing for the original SVG map |
+| HTML / SVG / JavaScript | Original offline reporting dashboard |
 
 ## Running the Project
+
+### Recommended Setup — dbt and Streamlit
+
+This is the recommended way to run the current Bicycle Theft Intelligence analytics platform.
+
+**Prerequisites:** Python 3.12, Git and a terminal. The repository must contain the raw JSON data files under `data/raw/`.
+
+**1. Clone the repository**
+
+```bash
+git clone https://github.com/luisenrique2k1/bicycle-theft-intelligence.git
+cd bicycle-theft-intelligence
+```
+
+**2. Create and activate a Python virtual environment**
+
+```bash
+python3.12 -m venv .venv
+source .venv/bin/activate
+```
+
+**3. Install dependencies**
+
+```bash
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
+```
+
+**4. Configure the DuckDB warehouse**
+
+From the repository root:
+
+```bash
+export BIKE_THEFT_RAW_PATH="$PWD/data/raw/*/*.json"
+export BIKE_THEFT_DB_PATH="$PWD/dbt_bike_theft/dbt_warehouse.duckdb"
+```
+
+**5. Build and test the dbt models**
+
+```bash
+dbt build \
+  --project-dir dbt_bike_theft \
+  --profiles-dir dbt_bike_theft
+```
+
+This builds six dbt models and runs the configured data quality tests.
+
+**6. Launch the interactive dashboard**
+
+```bash
+python -m streamlit run dashboard/app.py
+```
+
+Open `http://localhost:8501` in your browser.
+
+The dashboard reads the DuckDB warehouse produced by dbt and supports geographical filtering, monthly trend analysis, area comparisons and interactive theft hotspot mapping.
+
+**Note:** The dbt warehouse must be built before launching the dashboard. AWS credentials and Terraform are not required to run the local analytics dashboard.
+
+---
+
+### Original Pipeline — Python, SQL and HTML Dashboard
+
+The following instructions describe the original pipeline, including the HTML dashboard, geographical preparation and optional Docker execution.
 
 The project supports two execution methods. **Both use the same Python and SQL pipeline code; Docker is optional.**
 
@@ -241,80 +413,154 @@ Large geographical datasets and generated map assets are excluded from Git to ke
 
 ## Testing and Data Quality
 
-Run Python tests locally:
+The project implements automated validation at multiple stages of the data engineering pipeline.
+
+### Python Testing
+
+The project uses pytest to validate pipeline functionality and transformation behaviour.
+
+Run locally:
 
 ```bash
-.venv/bin/python -m pytest -q
+python -m pytest -q
 ```
 
-Or use:
+The Python tests are also executed automatically through GitHub Actions.
+
+### Original SQL Data Quality Checks
+
+The original DuckDB pipeline implements nine SQL checks covering:
+
+1. Non-null crime identifiers.
+2. Unique crime identifiers.
+3. Bicycle theft category consistency.
+4. Valid UK geographical coordinates.
+5. Consistency between reporting month and source folder.
+6. Reconciliation of fact records against distinct raw crime identifiers.
+7. Referential integrity between fact and street dimension tables.
+8. Consistent street identifiers and names.
+9. Valid chronological ordering of crime outcomes.
+
+These checks help detect invalid or inconsistent records during warehouse construction.
+
+### dbt Data Quality Tests
+
+The modern dbt pipeline includes **25 automated tests** across six SQL models.
+
+The tests validate model assumptions such as uniqueness, non-null values, relationships and accepted categorical values.
+
+The geographical classification field `collection_area` is validated against the expected collection areas: London, Brighton and Guildford.
+
+Run the complete dbt build and test process from the repository root:
 
 ```bash
-./run.sh test
+export BIKE_THEFT_RAW_PATH="$PWD/data/raw/*/*.json"
+export BIKE_THEFT_DB_PATH="$PWD/dbt_bike_theft/dbt_warehouse.duckdb"
+
+dbt build \
+  --project-dir dbt_bike_theft \
+  --profiles-dir dbt_bike_theft
 ```
 
-The project implements nine SQL quality checks covering:
+A successful dbt build confirms that the models were built and all enabled tests passed for that execution.
 
-1. Non-null crime identifiers
-2. Unique crime identifiers
-3. Bicycle theft category consistency
-4. Valid UK coordinates
-5. Month and source-folder consistency
-6. Fact-to-raw record reconciliation
-7. Street dimension referential integrity
-8. Consistent street identifiers and names
-9. Valid chronological ordering of crime outcomes
+### Automated Validation in GitHub Actions
 
-Any failed SQL check causes the pipeline build to fail.
+Continuous integration runs pytest, the original SQL validation, dbt transformations and tests, and separate Docker-based checks.
+
+The scheduled monthly ingestion workflow also performs validation before committing newly downloaded data.
 
 ## CI/CD — GitHub Actions
 
-The GitHub Actions workflow is defined in:
+The project uses two GitHub Actions workflows to automate testing, data ingestion and warehouse validation.
 
-```text
-.github/workflows/python-tests.yml
-```
+### Continuous Integration
 
-It runs on pushes and pull requests targeting `main`.
+**Workflow:** `.github/workflows/python-tests.yml`
+
+Triggered by pushes and pull requests targeting the `main` branch.
+
+The workflow runs two independent jobs:
+
+**1. Python and dbt validation**
+
+- Sets up Python 3.12 and installs project dependencies.
+- Executes the pytest test suite.
+- Validates the original DuckDB SQL transformations using synthetic test fixtures.
+- Builds the dbt warehouse from the project dataset.
+- Executes the configured dbt data quality tests.
+
+**2. Docker validation**
+
+- Builds the Docker Compose images.
+- Runs Python tests inside the pipeline container.
+- Validates SQL transformations using synthetic fixtures inside Docker.
+
+The CI workflow validates the data engineering pipeline without requiring AWS credentials.
+
+### Scheduled Monthly Ingestion
+
+**Workflow:** `.github/workflows/monthly-ingestion.yml`
+
+Scheduled for the 15th of each month at 08:00 UTC. It can also be triggered manually using GitHub Actions.
 
 The workflow:
 
-1. Checks out the repository.
-2. Configures Python 3.12.
-3. Installs project dependencies.
-4. Executes pytest.
-5. Builds DuckDB transformations against synthetic test fixtures.
-6. Runs all nine SQL data quality checks.
+1. Checks out the repository and configures Python 3.12.
+2. Installs project dependencies and runs pytest.
+3. Fetches the latest published bicycle theft data from the UK Police API.
+4. Rebuilds and validates the original DuckDB warehouse.
+5. Builds the dbt models and executes their automated tests.
+6. Commits and pushes newly downloaded data to the `main` branch when changes are detected.
 
-The dashboard integration test is skipped in CI when excluded geographical assets are unavailable. **The current CI workflow does not download the full OpenStreetMap dataset or build Docker images.** Docker and the real geographical download were also tested manually during development.
+Concurrency controls prevent overlapping monthly ingestion runs.
 
-[View GitHub Actions](https://github.com/luisenrique2k1/bicycle-theft-intelligence/actions)
+### AWS S3 Synchronisation
+
+AWS S3 storage is provisioned using Terraform, and raw JSON files can be synchronised using boto3.
+
+S3 synchronisation is currently a separate operation and is not performed automatically by either GitHub Actions workflow.
+
+### GitHub Actions
+
+[View the project workflows](https://github.com/luisenrique2k1/bicycle-theft-intelligence/actions)
 
 ## Limitations and Future Improvements
 
-- Expand the historical dataset for stronger year-on-year comparisons.
-- Incorporate later-arriving police outcome records.
-- Compare recorded thefts against bicycle parking capacity or cycling activity.
-- Introduce scheduled ingestion and incremental updates.
-- Extend CI/CD to build and validate Docker images and geographical preparation.
-- Add a full clean-clone end-to-end integration test.
-- Consider cloud deployment and orchestration for scheduled pipeline execution.
+### Current Limitations
 
-## AI-Assisted Development
+- **Geographical coverage:** The dataset represents selected collection locations in London, Brighton and Guildford, not complete coverage of these cities.
+- **Approximate locations:** The UK Police API provides approximate street-level crime locations rather than exact incident coordinates.
+- **Recorded incidents versus risk:** Higher incident counts do not necessarily indicate a higher probability of bicycle theft. The dataset does not include reliable bicycle parking or cycling exposure data.
+- **Reporting delays:** Police crime data and investigation outcomes may be published or updated after the reporting month.
+- **Cloud integration:** Raw JSON files are synchronised to AWS S3 separately. The scheduled monthly ingestion workflow does not currently upload files to S3.
+- **Dashboard hosting:** The Streamlit dashboard currently runs locally rather than being hosted as a publicly accessible application.
 
-This project was developed with AI-assisted coding support, including Claude and ChatGPT.
+### Future Improvements
 
-Claude helped draft the initial ingestion, SQL transformations, tests and README structure. Subsequent development included improvements to the interactive dashboard, geographical processing, automated validation, Docker execution and GitHub Actions integration.
+1. **Cloud deployment:** Deploy the Streamlit dashboard so users can access it through a public URL.
+2. **Automated S3 synchronisation:** Extend the ingestion workflow to upload newly collected data to AWS S3 using secure GitHub Actions authentication.
+3. **Incremental dbt processing:** Investigate incremental materialisation to avoid rebuilding all analytical tables as the dataset grows.
+4. **Additional data sources:** Incorporate bicycle parking availability or cycling activity data to provide more meaningful context for recorded theft counts.
+5. **Historical outcome updates:** Improve handling of police investigation outcomes that change after initial publication.
+6. **Extended geographical analysis:** Explore additional UK collection areas and improve comparisons between locations.
 
-The project uses synthetic fixtures to validate transformation logic independently of the live Police API.
+These enhancements would build on the existing automated ingestion, dimensional modelling, data quality testing and interactive analytics platform.
 
-**Development decisions to document before portfolio submission:**
 
-- **Kept:** The layered DuckDB architecture and automated data quality checks.
-- **Rejected:** Reliance on `persistent_id` alone for deduplication, because it can be missing.
-- **Changed:** Improved London map performance, added automated geographical data preparation, reproducible Docker execution and automated CI/CD validation.
+## Development Approach and AI-Assisted Engineering
 
-These notes should be reviewed and adjusted to reflect the developer's own decisions and contributions accurately.
+This project was conceived, planned and directed by me, from the initial idea of analysing bicycle theft data to the design of the data engineering pipeline and interactive dashboard.
+
+I selected the project objectives, data sources, technologies and overall approach, making decisions throughout development about data ingestion, storage, transformation, testing, automation and visualisation.
+
+I used AI tools, including ChatGPT and Claude, as development assistants to support coding, troubleshooting, technical research and learning. AI-assisted suggestions and generated code were reviewed, tested and refined through hands-on development.
+
+Throughout the project, I worked with Python, SQL, DuckDB, dbt, AWS, Terraform, GitHub Actions and Streamlit, investigating errors, validating results and making decisions about the implementation.
+
+The project also involved addressing practical engineering challenges, including duplicate records from overlapping geographical collection areas, data quality validation, reproducible pipeline execution and the limitations of police-recorded crime data.
+
+**AI supported the development process, while the project concept, technical direction, implementation decisions and validation remained under my responsibility.**
 
 ## Repository
 

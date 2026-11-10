@@ -11,5 +11,25 @@ select
     location_subtype,
     outcome_category,
     outcome_month,
-    source_file
+    source_file,
+
+    case
+        when regexp_extract(
+            source_file, '[^/]+\.json$'
+        ) = 'brighton.json'
+            then 'Brighton'
+
+        when regexp_extract(
+            source_file, '[^/]+\.json$'
+        ) = 'guildford.json'
+            then 'Guildford'
+
+        when regexp_extract(
+            source_file, '[^/]+\.json$'
+        ) like 'london_%'
+            then 'London'
+
+        else 'Other'
+    end as collection_area
+
 from {{ ref('stg_crimes') }}

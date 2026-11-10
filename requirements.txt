@@ -6,3 +6,5 @@ pyproj>=3.6
 boto3>=1.43,<2.0
 dbt-core==1.12.6
 dbt-duckdb==1.11.1
+streamlit==1.67.0
+plotly==7.1.0

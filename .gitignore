@@ -59,3 +59,5 @@ crash.*.log
 **/target/
 **/logs/
 **/.user.yml
+# Accidental dashboard backup
+dashboard/app.pyy
