@@ -236,6 +236,32 @@ The dashboard reads the DuckDB warehouse produced by dbt and supports geographic
 
 ---
 
+### Optional Infrastructure — AWS S3 and Docker
+
+The project is designed to run locally using Python, DuckDB and dbt without requiring cloud infrastructure or containerisation.
+
+**AWS S3 — Optional Cloud Storage**
+
+AWS S3 provides an additional cloud storage layer for the raw bicycle theft datasets. The S3 bucket and associated infrastructure are provisioned using Terraform, and a Python/boto3 synchronisation process uploads the raw JSON files.
+
+This demonstrates infrastructure as code, cloud storage integration and data engineering practices.
+
+S3 is not required for local pipeline execution. The default pipeline reads raw JSON files directly from the repository's `data/raw/` directory. S3 synchronisation is a separate operation and is not currently part of the automated monthly ingestion workflow.
+
+**Docker — Optional Containerised Execution**
+
+Docker provides an alternative, containerised environment for running the original Python/SQL pipeline and its tests, helping reduce differences between development environments.
+
+Docker is not required to run the project locally. Reviewers can use a standard Python virtual environment to execute the pipeline, build the dbt models and launch the Streamlit dashboard.
+
+The GitHub Actions CI workflow also validates Docker-based execution independently.
+
+**Recommended Approach for Reviewers**
+
+For the simplest reproducible setup, use the Python virtual environment, build the DuckDB warehouse with dbt, and launch the Streamlit dashboard.
+
+AWS S3 and Docker are optional extensions demonstrating cloud infrastructure and containerisation capabilities, rather than dependencies of the core analytics workflow.
+
 ### Original Pipeline — Python, SQL and HTML Dashboard
 
 The following instructions describe the original pipeline, including the HTML dashboard, geographical preparation and optional Docker execution.
@@ -547,20 +573,15 @@ S3 synchronisation is currently a separate operation and is not performed automa
 
 These enhancements would build on the existing automated ingestion, dimensional modelling, data quality testing and interactive analytics platform.
 
-
 ## Development Approach and AI-Assisted Engineering
 
-This project was conceived, planned and directed by me, from the initial idea of analysing bicycle theft data to the design of the data engineering pipeline and interactive dashboard.
+This project was conceived, planned and directed by me, from identifying the bicycle theft analysis problem to designing the data pipeline and interactive dashboard.
 
-I selected the project objectives, data sources, technologies and overall approach, making decisions throughout development about data ingestion, storage, transformation, testing, automation and visualisation.
+I selected the data sources, technologies and overall implementation approach, including the ingestion process, data modelling, automated testing, cloud storage and visualisation.
 
-I used AI tools, including ChatGPT and Claude, as development assistants to support coding, troubleshooting, technical research and learning. AI-assisted suggestions and generated code were reviewed, tested and refined through hands-on development.
+I used AI tools as a support layer for debugging, researching unfamiliar errors and accelerating boilerplate code, while retaining ownership of the project's architecture, data modelling decisions, implementation approach and final validation.
 
-Throughout the project, I worked with Python, SQL, DuckDB, dbt, AWS, Terraform, GitHub Actions and Streamlit, investigating errors, validating results and making decisions about the implementation.
-
-The project also involved addressing practical engineering challenges, including duplicate records from overlapping geographical collection areas, data quality validation, reproducible pipeline execution and the limitations of police-recorded crime data.
-
-**AI supported the development process, while the project concept, technical direction, implementation decisions and validation remained under my responsibility.**
+All components were reviewed, tested and refined through hands-on development, with automated validation using Python, dbt and GitHub Actions.
 
 ## Repository
 
