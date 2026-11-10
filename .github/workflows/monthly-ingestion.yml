@@ -49,6 +49,13 @@ jobs:
        run: |
           python -c "from pathlib import Path; from pipeline.build import build; build(Path('data/raw'), 'warehouse.duckdb', None)"
 
+     - name: Build and test dbt transformations
+       env:
+          BIKE_THEFT_RAW_PATH: ${{ github.workspace }}/data/raw/*/*.json
+          BIKE_THEFT_DB_PATH: ${{ runner.temp }}/bike_theft_monthly.duckdb
+       run: |
+          dbt build --project-dir dbt_bike_theft --profiles-dir dbt_bike_theft
+
      - name: Commit newly downloaded crime data
        run: |
           git config user.name "github-actions[bot]"
