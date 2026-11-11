@@ -16,6 +16,24 @@ An interactive Streamlit dashboard enables users to explore monthly trends, comp
 
 **Data limitations:** Collection locations are sampled, police-recorded locations are approximate, and recorded theft counts do not represent the probability of bicycle theft.
 
+
+## 🎬 Dashboard Video Demonstration
+
+Watch the 56-second demonstration of the **Bicycle Theft Intelligence** interactive dashboard.
+
+https://github.com/user-attachments/assets/44cc409e-a989-44d8-bebf-e093b342a15e
+
+The demonstration showcases:
+
+- Interactive geographical and reporting-period filters
+- Monthly bicycle theft trends across London, Brighton and Guildford
+- Recorded bicycle theft hotspots and rankings
+- Interactive OpenStreetMap visualisation
+- Analysis of 13,953 unique incidents across 36 months
+
+*Note: The dataset covers selected collection areas rather than complete citywide crime coverage.*
+
+
 ## Modern Data Engineering Architecture — dbt, AWS and Streamlit
 
 The project has evolved into an end-to-end data engineering platform that combines automated ingestion, cloud object storage, SQL transformation, data quality testing and interactive analytics.
